@@ -1,0 +1,60 @@
+/* ============ P2 completion page ============ */
+.done-page { min-height: 100vh; display: grid; place-items: center; padding: 48px 20px 100px; }
+.done-card {
+  position: relative; overflow: hidden;
+  width: 100%; max-width: 540px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 26px; box-shadow: var(--shadow-lg);
+  padding: 40px 36px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.done-check {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(150deg, oklch(0.7 0.16 150), oklch(0.55 0.15 152));
+  color: #fff; font-size: 38px; font-weight: 800; display: grid; place-items: center;
+  box-shadow: 0 8px 24px oklch(0.55 0.15 150 / 0.4);
+  margin-bottom: 10px; animation: pop .4s cubic-bezier(.2,1.4,.4,1);
+}
+.done-title { font-family: var(--font-display); font-size: 30px; letter-spacing: -0.03em; margin: 6px 0 0; }
+.done-sub { font-size: 15px; color: var(--ink-2); margin: 8px 0 22px; text-wrap: pretty; }
+
+.done-summary { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.done-row {
+  display: flex; align-items: center; gap: 13px;
+  background: var(--bg-2); border: 1px solid var(--line);
+  border-radius: 14px; padding: 11px 14px; text-align: left;
+}
+.done-thumb { width: 46px; height: 46px; flex: none; }
+.done-rowinfo { flex: 1; min-width: 0; }
+.done-name { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; }
+.done-team { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+
+.done-private {
+  display: flex; gap: 11px; align-items: flex-start; text-align: left;
+  background: var(--accent-soft); border-radius: 14px; padding: 14px 16px;
+  margin-top: 18px; width: 100%; font-size: 13.5px; color: var(--ink-2); line-height: 1.45;
+}
+.done-private strong { color: var(--accent-strong); }
+
+.done-receipt {
+  width: 100%; margin-top: 16px; border-top: 1px dashed var(--line-strong); padding-top: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.done-receipt > div { display: flex; justify-content: space-between; font-size: 13px; }
+.done-receipt span { color: var(--ink-3); }
+.done-receipt b { color: var(--ink); font-family: var(--font-display); font-weight: 600; }
+
+/* confetti */
+.done-confetti { position: absolute; inset: 0 0 auto; height: 0; pointer-events: none; }
+.done-confetti span {
+  position: absolute; top: -10px; left: calc(8% + (var(--i) * 6.2%));
+  width: 8px; height: 13px; border-radius: 2px;
+  background: oklch(0.7 0.16 calc(var(--i) * 40));
+  opacity: 0; animation: fall 2.6s ease-in forwards; animation-delay: calc(var(--i) * 90ms);
+}
+@keyframes fall {
+  0% { transform: translateY(0) rotate(0); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(560px) rotate(540deg); opacity: 0; }
+}
+@media (max-width: 480px) { .done-card { padding: 30px 20px; } }
