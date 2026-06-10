@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Candidate } from '../types/api';
+import { hasFigmaPrototype } from '../lib/imageUrl';
+import { FigmaFullscreen } from './FigmaFullscreen';
 import { Placeholder } from './Placeholder';
 
 interface ArtworkLightboxProps {
@@ -14,6 +16,8 @@ export function ArtworkLightbox({ candidates, index, onClose, onPrev, onNext }: 
   const cand = candidates[index];
   const total = candidates.length;
   const [landscapeHint, setLandscapeHint] = useState(false);
+  const [figmaOpen, setFigmaOpen] = useState(false);
+  const hasFigma = hasFigmaPrototype(cand);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -51,29 +55,45 @@ export function ArtworkLightbox({ candidates, index, onClose, onPrev, onNext }: 
 
   return (
     <div className="art-lb-backdrop" onClick={onClose}>
-      <button type="button" className="lb-nav lb-prev art-lb-nav" onClick={(e) => { e.stopPropagation(); onPrev(); }} aria-label="이전 작품">‹</button>
-      <button type="button" className="lb-nav lb-next art-lb-nav" onClick={(e) => { e.stopPropagation(); onNext(); }} aria-label="다음 작품">›</button>
+      <button type="button" className="lb-nav lb-prev art-lb-nav" onClick={(e) => { e.stopPropagation(); onPrev(); }} aria-label="이전 후보">‹</button>
+      <button type="button" className="lb-nav lb-next art-lb-nav" onClick={(e) => { e.stopPropagation(); onNext(); }} aria-label="다음 후보">›</button>
       <div className="art-lb-card" style={{ '--ph-h': cand.tint } as React.CSSProperties} onClick={(e) => e.stopPropagation()}>
         <button type="button" className="lb-close" onClick={onClose} aria-label="닫기">✕</button>
         <div className="art-lb-media">
           <Placeholder cand={cand} ratio="auto" round="0" emojiSize={100} fit="contain" className="art-lb-ph" />
         </div>
         <div className="art-lb-info">
-          <div className="art-lb-count">작품 {index + 1} / {total}</div>
+          <div className="art-lb-count">후보 {index + 1} / {total}</div>
           <h2 className="art-lb-name">{cand.name}</h2>
           {cand.tagline && <p className="art-lb-tag">{cand.tagline}</p>}
           {cand.team && <div className="art-lb-team">{cand.team}</div>}
           {landscapeHint && (
             <div className="art-lb-orient">
-              <span>📱 기기를 가로로 돌리면 작품을 더 크게 볼 수 있어요</span>
+              <span>📱 기기를 가로로 돌리면 후보를 더 크게 볼 수 있어요</span>
               <button type="button" className="btn btn-ghost art-lb-land-btn" onClick={tryLandscape}>
                 가로 화면 고정
               </button>
             </div>
           )}
-          <button type="button" className="btn btn-ghost" onClick={onNext}>다음 작품 →</button>
+          {hasFigma && (
+            <button type="button" className="btn btn-figma" onClick={() => setFigmaOpen(true)}>
+              Figma 프로토타입 보기
+            </button>
+          )}
+          <button type="button" className="btn btn-ghost" onClick={onNext}>다음 후보 →</button>
         </div>
       </div>
+
+      {figmaOpen && (
+        <FigmaFullscreen
+          cand={cand}
+          index={index}
+          total={total}
+          onClose={() => setFigmaOpen(false)}
+          onPrev={onPrev}
+          onNext={onNext}
+        />
+      )}
     </div>
   );
 }

@@ -7,7 +7,19 @@ import { Placeholder } from '../../components/Placeholder';
 import { QrCodeModal } from '../../components/QrCodeModal';
 import { QrOpenButton } from '../../components/QrOpenButton';
 import { getToken } from '../../lib/auth';
-import type { Poll, ResultsOut } from '../../types/api';
+import { rankNumbers } from '../../lib/rankSlots';
+import type { Poll, ResultRow, ResultsOut } from '../../types/api';
+import { AdminWarnBanner } from '../../components/AdminWarnBanner';
+import { hasSelectionMismatch, selectionMismatchMessage } from '../../lib/pollWarnings';
+import { EligibleVotersPanel } from '../../components/EligibleVotersPanel';
+import { parseVerifyFields } from '../../lib/verifyFields';
+import { usePollEvents } from '../../lib/usePollEvents';
+
+const LEGEND_COLORS = ['var(--gold)', 'var(--silver)', 'var(--bronze)', 'oklch(0.72 0.12 280)', 'oklch(0.68 0.1 220)'];
+
+function rankCounts(row: ResultRow, maxSel: number): number[] {
+  return [row.r1, row.r2, row.r3, row.r4 ?? 0, row.r5 ?? 0].slice(0, maxSel);
+}
 
 export function ResultsPage() {
   const { pollId } = useParams();
@@ -25,15 +37,19 @@ export function ResultsPage() {
     setResults(r);
   }, [token, id]);
 
-  useEffect(() => {
-    load();
-    const t = setInterval(load, 5000);
-    return () => clearInterval(t);
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
+
+  usePollEvents(id, {
+    poll_updated: load,
+    results_updated: load,
+    voters_updated: load,
+  }, token);
 
   if (!poll || !results) return <div className="admin-page">불러오는 중…</div>;
 
   const rows = results.rows;
+  const maxSel = poll.max_selections ?? 3;
+  const selectionWarn = hasSelectionMismatch(poll.candidates.length, maxSel);
   const maxScore = rows[0]?.score || 1;
   const participation = Math.round(results.participation_rate * 100);
   const active = poll.status === 'active';
@@ -41,8 +57,8 @@ export function ResultsPage() {
   const stats = [
     { k: '총 투표 수', v: results.total_ballots.toLocaleString(), sub: '유효 표' },
     { k: '참여율', v: `${participation}%`, sub: `${results.total_ballots} / ${results.eligible_count}명` },
-    { k: '후보 수', v: poll.candidates.length, sub: '공모 작품' },
-    { k: '1위 작품', v: rows[0]?.name ?? '-', sub: rows[0] ? `${rows[0].score}점` : '', wide: true },
+    { k: '후보 수', v: poll.candidates.length, sub: '공모 후보' },
+    { k: '우승', v: rows[0]?.name ?? '-', sub: rows[0] ? `${rows[0].score}점` : '', champion: true },
   ];
 
   const toggleActive = async () => {
@@ -91,6 +107,7 @@ export function ResultsPage() {
               <span className="toggle-track"><span className="toggle-knob" /></span>
               <span className="toggle-label">{active ? '투표 종료' : '투표 시작'}</span>
             </button>
+            <Link to={`/polls/${id}/results`} className="btn btn-ghost btn-sm">공개 결과</Link>
             <button type="button" className="btn btn-ghost btn-sm" onClick={downloadCsv}>CSV</button>
             <button
               type="button"
@@ -104,6 +121,10 @@ export function ResultsPage() {
         </div>
         <p className="admin-sub">가중 점수 = 1순위 ×3 + 2순위 ×2 + 3순위 ×1 · Poll #{poll.id}</p>
       </header>
+
+      {selectionWarn && (
+        <AdminWarnBanner message={selectionMismatchMessage(poll.candidates.length, maxSel)} />
+      )}
 
       {showReset && (
         <ConfirmDialog
@@ -121,12 +142,28 @@ export function ResultsPage() {
         <QrCodeModal pollId={poll.id} title={poll.title} onClose={() => setShowQr(false)} />
       )}
 
+      {poll.poll_type === 'restricted' && (
+        <section className="admin-board ev-results-board">
+          <EligibleVotersPanel
+            pollId={id}
+            token={token}
+            verifyFields={parseVerifyFields(poll.verify_fields)}
+            compact
+            collapsible
+            defaultExpanded={false}
+            hint="실수로 투표한 경우, 해당 인원만 취소할 수 있습니다."
+          />
+        </section>
+      )}
+
       <div className="admin-stats">
         {stats.map((s) => (
-          <div key={s.k} className={`stat-card${s.wide ? ' wide' : ''}`}>
-            <div className="stat-k">{s.k}</div>
+          <div key={s.k} className={`stat-card${s.champion ? ' stat-card--champion' : ''}`}>
+            <div className="stat-card-label">
+              <span className="stat-k">{s.k}</span>
+              {s.sub && <span className="stat-sub">{s.sub}</span>}
+            </div>
             <div className="stat-v">{s.v}</div>
-            <div className="stat-sub">{s.sub}</div>
           </div>
         ))}
       </div>
@@ -135,9 +172,12 @@ export function ResultsPage() {
         <div className="board-head">
           <h3>후보별 가중 점수 랭킹</h3>
           <div className="board-legend">
-            <span><i style={{ background: 'var(--gold)' }} />1순위×3</span>
-            <span><i style={{ background: 'var(--silver)' }} />2순위×2</span>
-            <span><i style={{ background: 'var(--bronze)' }} />3순위×1</span>
+            {rankNumbers(maxSel).map((rank) => (
+              <span key={rank}>
+                <i style={{ background: LEGEND_COLORS[rank - 1] }} />
+                {rank}순위×{maxSel - rank + 1}
+              </span>
+            ))}
           </div>
         </div>
         <div className="board-rows">
@@ -147,7 +187,7 @@ export function ResultsPage() {
             return (
               <div className={`board-row${idx < 3 ? ' top' : ''}`} key={r.candidate_id} style={{ '--ph-h': tint } as React.CSSProperties}>
                 <div className="br-rank">
-                  {idx < 3 ? <Medal rank={(idx + 1) as 1 | 2 | 3} size={34} /> : <span className="br-num">{idx + 1}</span>}
+                  {idx < 3 ? <Medal rank={idx + 1} size={34} /> : <span className="br-num">{idx + 1}</span>}
                 </div>
                 <div className="br-thumb">
                   {cand && <Placeholder cand={cand} ratio="1 / 1" round="10px" />}
@@ -158,12 +198,23 @@ export function ResultsPage() {
                 </div>
                 <div className="br-bar">
                   <div className="bar-track">
-                    <div className="seg seg1" style={{ width: `${(r.r1 * 3 / maxScore) * 100}%` }} />
-                    <div className="seg seg2" style={{ width: `${(r.r2 * 2 / maxScore) * 100}%` }} />
-                    <div className="seg seg3" style={{ width: `${(r.r3 * 1 / maxScore) * 100}%` }} />
+                    {rankNumbers(maxSel).map((rank) => {
+                      const counts = rankCounts(r, maxSel);
+                      const weight = maxSel - rank + 1;
+                      const count = counts[rank - 1] ?? 0;
+                      return (
+                        <div
+                          key={rank}
+                          className={`seg seg${rank}`}
+                          style={{ width: `${(count * weight / maxScore) * 100}%` }}
+                        />
+                      );
+                    })}
                   </div>
                   <div className="br-breakdown">
-                    <span>1위 {r.r1}</span><span>2위 {r.r2}</span><span>3위 {r.r3}</span>
+                    {rankNumbers(maxSel).map((rank) => (
+                      <span key={rank}>{rank}위 {rankCounts(r, maxSel)[rank - 1]}</span>
+                    ))}
                   </div>
                 </div>
                 <div className="br-score"><b>{r.score}</b><span>점</span></div>

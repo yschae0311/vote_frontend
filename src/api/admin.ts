@@ -1,6 +1,8 @@
 import { apiFetch, ApiError } from './client';
 import type {
   Candidate,
+  EligibleVoter,
+  EligibleVoterCreate,
   Poll,
   PollCreatePayload,
   PollListItem,
@@ -49,7 +51,7 @@ export function deletePoll(token: string, pollId: number) {
 export function addCandidate(
   token: string,
   pollId: number,
-  payload: { name: string; team?: string; tagline?: string; image_url?: string },
+  payload: { name: string; team?: string; tagline?: string; image_url?: string; figma_url?: string | null },
 ) {
   return apiFetch<Candidate>(`/admin/polls/${pollId}/candidates`, {
     method: 'POST',
@@ -61,11 +63,41 @@ export function updateCandidate(
   token: string,
   pollId: number,
   candidateId: number,
-  payload: { name?: string; team?: string; tagline?: string; image_url?: string },
+  payload: { name?: string; team?: string; tagline?: string; image_url?: string; figma_url?: string | null },
 ) {
   return apiFetch<Candidate>(`/admin/polls/${pollId}/candidates/${candidateId}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
+  }, token);
+}
+
+export function listEligibleVoters(token: string, pollId: number) {
+  return apiFetch<EligibleVoter[]>(`/admin/polls/${pollId}/voters`, {}, token);
+}
+
+export function addEligibleVoter(token: string, pollId: number, payload: EligibleVoterCreate) {
+  return apiFetch<EligibleVoter>(`/admin/polls/${pollId}/voters`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }, token);
+}
+
+export function addEligibleVotersBulk(token: string, pollId: number, voters: EligibleVoterCreate[]) {
+  return apiFetch<EligibleVoter[]>(`/admin/polls/${pollId}/voters/bulk`, {
+    method: 'POST',
+    body: JSON.stringify({ voters }),
+  }, token);
+}
+
+export function deleteEligibleVoter(token: string, pollId: number, voterId: number) {
+  return apiFetch<void>(`/admin/polls/${pollId}/voters/${voterId}`, {
+    method: 'DELETE',
+  }, token);
+}
+
+export function revokeVoterVote(token: string, pollId: number, voterId: number) {
+  return apiFetch<{ revoked: boolean }>(`/admin/polls/${pollId}/voters/${voterId}/vote`, {
+    method: 'DELETE',
   }, token);
 }
 

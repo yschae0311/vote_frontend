@@ -29,13 +29,6 @@
 .done-name { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; }
 .done-team { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
 
-.done-private {
-  display: flex; gap: 11px; align-items: flex-start; text-align: left;
-  background: var(--accent-soft); border-radius: 14px; padding: 14px 16px;
-  margin-top: 18px; width: 100%; font-size: 13.5px; color: var(--ink-2); line-height: 1.45;
-}
-.done-private strong { color: var(--accent-strong); }
-
 .done-receipt {
   width: 100%; margin-top: 16px; border-top: 1px dashed var(--line-strong); padding-top: 16px;
   display: flex; flex-direction: column; gap: 8px;
@@ -43,6 +36,15 @@
 .done-receipt > div { display: flex; justify-content: space-between; font-size: 13px; }
 .done-receipt span { color: var(--ink-3); }
 .done-receipt b { color: var(--ink); font-family: var(--font-display); font-weight: 600; }
+
+.done-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.done-actions .btn { width: 100%; text-decoration: none; justify-content: center; }
 
 /* confetti */
 .done-confetti { position: absolute; inset: 0 0 auto; height: 0; pointer-events: none; }

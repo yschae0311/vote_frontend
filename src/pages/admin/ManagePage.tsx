@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPoll, deletePoll, listPolls, updatePoll } from '../../api/admin';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { CreatePollModal } from '../../components/CreatePollModal';
@@ -9,6 +9,12 @@ import { QrOpenButton } from '../../components/QrOpenButton';
 import { getToken, clearToken } from '../../lib/auth';
 import type { PollListItem } from '../../types/api';
 import { ApiError } from '../../api/client';
+import { hasSelectionMismatch, selectionMismatchMessage } from '../../lib/pollWarnings';
+
+const POLL_TYPE_LABEL: Record<string, string> = {
+  open: '불특정',
+  restricted: '특정',
+};
 
 const STATUS_META: Record<string, { label: string; cls: string; dot: boolean }> = {
   active: { label: '진행중', cls: 'st-active', dot: true },
@@ -102,61 +108,102 @@ export function ManagePage() {
         <div className="mstat"><div className="mstat-v">{polls.filter((p) => p.status === 'draft').length}</div><div className="mstat-k">준비중</div></div>
       </div>
 
-      <div className="poll-table">
-        <div className="pt-head">
-          <span>투표</span><span>상태</span><span>후보</span><span>참여</span><span>QR 코드</span><span>관리</span>
-        </div>
-        {polls.map((p) => {
-          const sm = STATUS_META[p.status] ?? STATUS_META.draft;
-          const rate = p.ballots ? Math.round((p.ballots / p.eligible) * 100) : 0;
-          const created = new Date(p.created_at).toLocaleDateString('ko-KR');
-          const closes = p.closes_at ? new Date(p.closes_at).toLocaleDateString('ko-KR') : '미정';
-          return (
-            <div className={`pt-row${p.status === 'closed' ? ' is-closed' : ''}`} key={p.id}>
-              <div className="pt-poll">
-                <div className="pt-cat" data-cat={p.category}>{p.category}</div>
-                <div className="pt-titles">
-                  <div className="pt-title">{p.title}</div>
-                  <div className="pt-meta">#{p.id} · 생성 {created} · 마감 {closes}</div>
-                </div>
-              </div>
-              <div className="pt-status">
-                <span className={`pill st-pill ${sm.cls}`}>{sm.dot && <span className="dot" />}{sm.label}</span>
-              </div>
-              <div className="pt-cand"><b>{p.candidates}</b><span>명</span></div>
-              <div className="pt-part">
-                <b>{p.ballots.toLocaleString()}</b><span>표 · {rate}%</span>
-                <div className="pt-bar"><i style={{ width: `${rate}%` }} /></div>
-              </div>
-              <div className="pt-qr">
-                <QrOpenButton onClick={() => setQrPoll({ id: p.id, title: p.title })} />
-              </div>
-              <div className="pt-actions">
-                {(() => {
-                  const a = statusAction(p.status);
-                  return (
-                    <PtBtn
-                      variant={a.variant}
-                      icon={a.icon}
-                      label={a.label}
-                      onClick={() => cycle(p.id, p.status)}
-                    />
-                  );
-                })()}
-                <PtBtn variant="ghost" icon="📊" label="결과" to={`/admin/polls/${p.id}/results`} />
-                <PtBtn variant="ghost" icon="✎" label="수정" to={`/admin/polls/${p.id}/edit`} />
-                <PtBtn
-                  variant="delete"
-                  icon="🗑"
-                  label="삭제"
-                  title="투표 삭제"
-                  disabled={deleting}
-                  onClick={() => setDeleteTarget(p)}
-                />
-              </div>
-            </div>
-          );
-        })}
+      <div className="poll-table-wrap">
+        <table className="poll-table">
+          <colgroup>
+            <col className="pt-col pt-col--poll" />
+            <col className="pt-col pt-col--type" />
+            <col className="pt-col pt-col--status" />
+            <col className="pt-col pt-col--cand" />
+            <col className="pt-col pt-col--part" />
+            <col className="pt-col pt-col--qr" />
+            <col className="pt-col pt-col--actions" />
+          </colgroup>
+          <thead>
+            <tr>
+          <th>투표</th>
+          <th>타입</th>
+          <th>상태</th>
+              <th>후보</th>
+              <th>참여</th>
+              <th>QR</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {polls.map((p) => {
+              const sm = STATUS_META[p.status] ?? STATUS_META.draft;
+              const rate = p.ballots ? Math.round((p.ballots / p.eligible) * 100) : 0;
+              const created = new Date(p.created_at).toLocaleDateString('ko-KR');
+              const closes = p.closes_at ? new Date(p.closes_at).toLocaleDateString('ko-KR') : '미정';
+              const maxSel = p.max_selections ?? 3;
+              const selectionWarn = hasSelectionMismatch(p.candidates, maxSel);
+              return (
+                <tr key={p.id} className={p.status === 'closed' ? 'is-closed' : undefined}>
+                  <td data-label="투표">
+                    <div className="pt-poll-inner">
+                      <div className="pt-cat" data-cat={p.category}>{p.category}</div>
+                      <div className="pt-titles">
+                        <Link to={`/polls/${p.id}/results`} className="pt-title pt-title-link">
+                          {p.title}
+                        </Link>
+                        <div className="pt-meta">#{p.id} · 생성 {created} · 마감 {closes}</div>
+                        {selectionWarn && (
+                          <div className="pt-warn" title={selectionMismatchMessage(p.candidates, maxSel)}>
+                            ⚠ 선택 {maxSel}명 · 후보 {p.candidates}명
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td data-label="타입">
+                    <span className={`pill pt-type-pill pt-type--${p.poll_type || 'open'}`}>
+                      {POLL_TYPE_LABEL[p.poll_type] ?? '불특정'}
+                    </span>
+                  </td>
+                  <td data-label="상태">
+                    <span className={`pill st-pill ${sm.cls}`}>{sm.dot && <span className="dot" />}{sm.label}</span>
+                  </td>
+                  <td data-label="후보"><b>{p.candidates}</b><span>명</span></td>
+                  <td data-label="참여">
+                    <div className="pt-part-inner">
+                      <div><b>{p.ballots.toLocaleString()}</b><span>표 · {rate}%</span></div>
+                      <div className="pt-bar"><i style={{ width: `${rate}%` }} /></div>
+                    </div>
+                  </td>
+                  <td data-label="QR">
+                    <QrOpenButton onClick={() => setQrPoll({ id: p.id, title: p.title })} />
+                  </td>
+                  <td data-label="관리">
+                    <div className="pt-actions-inner">
+                      {(() => {
+                        const a = statusAction(p.status);
+                        return (
+                          <PtBtn
+                            variant={a.variant}
+                            icon={a.icon}
+                            label={a.label}
+                            onClick={() => cycle(p.id, p.status)}
+                          />
+                        );
+                      })()}
+                      <PtBtn variant="ghost" icon="📊" label="결과" to={`/admin/polls/${p.id}/results`} />
+                      <PtBtn variant="ghost" icon="✎" label="수정" to={`/admin/polls/${p.id}/edit`} />
+                      <PtBtn
+                        variant="delete"
+                        icon="🗑"
+                        label="삭제"
+                        title="투표 삭제"
+                        disabled={deleting}
+                        onClick={() => setDeleteTarget(p)}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       {deleteTarget && (
@@ -189,6 +236,9 @@ export function ManagePage() {
                 category: draft.category,
                 description: draft.desc || undefined,
                 closes_at: draft.closes_at ? `${draft.closes_at}T18:00:00` : undefined,
+                max_selections: draft.max_selections,
+                poll_type: draft.poll_type,
+                verify_fields: draft.poll_type === 'restricted' ? draft.verify_fields : undefined,
                 candidates: draft.candidates,
               });
               setCreating(false);
