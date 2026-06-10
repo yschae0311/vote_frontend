@@ -196,9 +196,12 @@ export function VotePage() {
           <div className="voted-icon">✓</div>
           <div className="voted-text">
             <strong>이미 투표를 완료했어요</strong>
-            <span>이 브라우저에서는 한 번만 투표할 수 있습니다. 결과는 운영팀이 집계 후 공개해요.</span>
+            <span>한 번 제출한 표는 수정할 수 없어요. 내 선택이나 결과는 아래에서 확인할 수 있습니다.</span>
           </div>
-          <button type="button" className="btn btn-ghost" onClick={() => navigate(`/polls/${id}/complete`)}>내 투표 보기</button>
+          <div className="voted-banner-actions">
+            <button type="button" className="btn btn-ghost" onClick={() => navigate(`/polls/${id}/complete`)}>내 투표 보기</button>
+            <button type="button" className="btn btn-primary" onClick={() => navigate(`/polls/${id}/results`)}>투표 결과 보기</button>
+          </div>
         </div>
       ) : canVote ? (
         <nav className="vote-guide" aria-label="투표 방법">
@@ -277,7 +280,16 @@ export function VotePage() {
               </span>
               <span className="ballot-sheet-chevron" aria-hidden />
             </button>
-            {!ballotSheetOpen && chosenCount > 0 && !voted && (
+            {!ballotSheetOpen && voted && (
+              <button
+                type="button"
+                className="btn btn-primary ballot-sheet-quick"
+                onClick={() => navigate(`/polls/${id}/results`)}
+              >
+                결과 보기
+              </button>
+            )}
+            {!ballotSheetOpen && !voted && chosenCount > 0 && (
               <button
                 type="button"
                 className="btn btn-primary ballot-sheet-quick"
@@ -321,15 +333,24 @@ export function VotePage() {
           </div>
           <div className="ballot-foot">
             <div className="ballot-hint">
-              {chosenCount === 0 && '최소 1명 이상 선택하면 제출할 수 있어요.'}
-              {chosenCount > 0 && remaining > 0 && `${remaining}개 순위가 비어 있어요 (채우지 않아도 제출 가능).`}
-              {chosenCount === maxSel && `선택 가능한 ${maxSel}명을 모두 채웠어요. 제출만 하면 끝!`}
+              {voted && '투표가 완료되었습니다. 결과 페이지에서 확인할 수 있어요.'}
+              {!voted && chosenCount === 0 && '최소 1명 이상 선택하면 제출할 수 있어요.'}
+              {!voted && chosenCount > 0 && remaining > 0 && `${remaining}개 순위가 비어 있어요 (채우지 않아도 제출 가능).`}
+              {!voted && chosenCount === maxSel && `선택 가능한 ${maxSel}명을 모두 채웠어요. 제출만 하면 끝!`}
             </div>
             <div className="ballot-actions">
-              <button type="button" className="btn btn-ghost" disabled={chosenCount === 0 || voted} onClick={() => setRankSlots(emptyRankSlots(maxSel))}>비우기</button>
-              <button type="button" className="btn btn-primary" disabled={chosenCount === 0 || voted || submitting} onClick={submit}>
-                {submitting ? '제출 중…' : '투표 제출하기'}
-              </button>
+              {!voted && (
+                <button type="button" className="btn btn-ghost" disabled={chosenCount === 0} onClick={() => setRankSlots(emptyRankSlots(maxSel))}>비우기</button>
+              )}
+              {voted ? (
+                <button type="button" className="btn btn-primary" onClick={() => navigate(`/polls/${id}/results`)}>
+                  투표 결과 보기
+                </button>
+              ) : (
+                <button type="button" className="btn btn-primary" disabled={chosenCount === 0 || submitting} onClick={submit}>
+                  {submitting ? '제출 중…' : '투표 제출하기'}
+                </button>
+              )}
             </div>
             <div className="ballot-note">
               <span aria-hidden>🔒</span>

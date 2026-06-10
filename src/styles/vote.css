@@ -426,6 +426,16 @@
 .voted-text { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 200px; }
 .voted-text strong { font-size: 17px; color: oklch(0.38 0.1 150); }
 .voted-text span { font-size: 13.5px; color: var(--ink-2); }
+.voted-banner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-end;
+}
+@media (min-width: 560px) {
+  .voted-banner-actions { width: auto; flex: none; }
+}
 
 /* layout */
 .vote-layout { display: grid; grid-template-columns: 1fr 330px; gap: 26px; align-items: start; }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { checkVote, getPoll } from '../api/polls';
-import { Medal } from '../components/Medal';
 import { Placeholder } from '../components/Placeholder';
 import { getFingerprint } from '../lib/fingerprint';
 import { getVoterToken } from '../lib/voterToken';
@@ -56,23 +55,28 @@ export function CompletePage() {
         <div className="done-check">✓</div>
         <span className="eyebrow">Vote submitted</span>
         <h1 className="done-title">투표가 접수되었어요!</h1>
-        <p className="done-sub">소중한 한 표 고마워요. 아래는 내가 선택한 순위 요약이에요.</p>
+        <p className="done-sub">소중한 한 표 고마워요. 아래는 내가 고른 순위예요.</p>
 
         {chosen.length > 0 ? (
-          <div className="done-summary">
-            {chosen.map((c, i) => (
-              <div className="done-row" key={c.id} style={{ '--ph-h': c.tint } as React.CSSProperties}>
-                <Medal rank={i + 1} size={38} showLabel />
-                <div className="done-thumb"><Placeholder cand={c} ratio="1 / 1" round="11px" /></div>
-                <div className="done-rowinfo">
-                  <div className="done-name">{c.name}</div>
-                  {c.team && <div className="done-team">{c.team}</div>}
-                </div>
-              </div>
-            ))}
+          <div className={`done-picks done-picks--${Math.min(chosen.length, 5)}`}>
+            {chosen.map((c, i) => {
+              const rank = i + 1;
+              return (
+                <article className="done-pick" key={c.id} data-rank={rank} style={{ '--ph-h': c.tint } as React.CSSProperties}>
+                  <div className="done-pick-media">
+                    <Placeholder cand={c} ratio="1 / 1" round="0" />
+                    <span className="done-pick-rank" aria-label={`${rank}순위`}>{rank}</span>
+                  </div>
+                  <div className="done-pick-meta">
+                    <h2 className="done-pick-name">{c.name}</h2>
+                    {c.team && <p className="done-pick-team">{c.team}</p>}
+                  </div>
+                </article>
+              );
+            })}
           </div>
         ) : (
-          <div className="done-summary"><div className="done-row"><span style={{ color: 'var(--ink-3)' }}>선택 내역이 없습니다.</span></div></div>
+          <p className="done-empty">선택 내역이 없습니다.</p>
         )}
 
         <div className="done-receipt">
@@ -81,10 +85,16 @@ export function CompletePage() {
           <div><span>상태</span><b style={{ color: 'oklch(0.5 0.13 150)' }}>● 집계 대기</b></div>
         </div>
 
-        <div className="done-actions">
-          <Link to={`/polls/${id}/results`} className="btn btn-primary">투표 결과 보기</Link>
-          <Link to={`/polls/${id}`} className="btn btn-ghost">투표 화면 다시 보기</Link>
-        </div>
+        <nav className="done-actions" aria-label="다음 단계">
+          <Link to={`/polls/${id}`} className="done-action done-action--back">
+            <span className="done-action-arrow" aria-hidden>←</span>
+            <span className="done-action-label">투표 화면 다시 보기</span>
+          </Link>
+          <Link to={`/polls/${id}/results`} className="done-action done-action--forward done-action--emph">
+            <span className="done-action-label">투표 결과 보기</span>
+            <span className="done-action-arrow" aria-hidden>→</span>
+          </Link>
+        </nav>
       </div>
     </div>
   );
