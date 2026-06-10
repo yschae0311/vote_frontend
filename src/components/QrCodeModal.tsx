@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import { CloseButton } from './CloseButton';
 
 interface QrCodeModalProps {
   pollId: number;
@@ -48,7 +49,7 @@ export function QrCodeModal({ pollId, title, onClose }: QrCodeModalProps) {
   return (
     <div className="qr-backdrop" onClick={onClose}>
       <div className="qr-modal" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="lb-close" onClick={onClose} aria-label="닫기">✕</button>
+        <CloseButton variant="surface" onClick={onClose} />
         <span className="eyebrow">QR Code · Poll #{pollId}</span>
         <h2 className="qr-title">{title}</h2>
         <p className="qr-sub">스마트폰으로 스캔하면 투표 페이지로 바로 이동해요.</p>

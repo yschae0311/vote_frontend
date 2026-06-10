@@ -5,6 +5,7 @@ import type { Rank, RankSlots } from '../lib/rankSlots';
 import { rankOf } from '../lib/rankSlots';
 import { RankPicker } from './RankPicker';
 import { FigmaFullscreen } from './FigmaFullscreen';
+import { CloseButton } from './CloseButton';
 import { ImageFullscreen } from './ImageFullscreen';
 import { Medal } from './Medal';
 import { Placeholder } from './Placeholder';
@@ -155,11 +156,7 @@ export function Lightbox({
         <div className="lb-canvas">
           <div className="lb-canvas-bar">
             <span className="lb-index">{index + 1} / {total}</span>
-            <button type="button" className="lb-dismiss" onClick={requestClose} aria-label="닫기">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+            <CloseButton onClick={requestClose} />
           </div>
 
           <div

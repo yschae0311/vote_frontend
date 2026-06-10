@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPoll, deletePoll, listPolls, updatePoll } from '../../api/admin';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { ResultsModeDialog } from '../../components/ResultsModeDialog';
 import { CreatePollModal } from '../../components/CreatePollModal';
 import { QrCodeModal } from '../../components/QrCodeModal';
 import { PtBtn } from '../../components/PtBtn';
@@ -42,6 +43,7 @@ export function ManagePage() {
   const [qrPoll, setQrPoll] = useState<{ id: number; title: string } | null>(null);
   const [error, setError] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<PollListItem | null>(null);
+  const [resultsPick, setResultsPick] = useState<{ id: number; title: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
@@ -187,7 +189,12 @@ export function ManagePage() {
                           />
                         );
                       })()}
-                      <PtBtn variant="ghost" icon="📊" label="결과" to={`/admin/polls/${p.id}/results`} />
+                      <PtBtn
+                        variant="ghost"
+                        icon="📊"
+                        label="결과"
+                        onClick={() => setResultsPick({ id: p.id, title: p.title })}
+                      />
                       <PtBtn variant="ghost" icon="✎" label="수정" to={`/admin/polls/${p.id}/edit`} />
                       <PtBtn
                         variant="delete"
@@ -215,6 +222,14 @@ export function ManagePage() {
           danger
           onConfirm={doDelete}
           onCancel={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {resultsPick && (
+        <ResultsModeDialog
+          pollId={resultsPick.id}
+          pollTitle={resultsPick.title}
+          onClose={() => setResultsPick(null)}
         />
       )}
 

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { Candidate } from '../types/api';
 import { getFigmaUrl, toFigmaEmbedUrl } from '../lib/imageUrl';
+import { CloseButton } from './CloseButton';
 
 interface FigmaFullscreenProps {
   cand: Candidate;
@@ -28,7 +29,7 @@ export function FigmaFullscreen({ cand, index, total, onClose, onPrev, onNext }:
 
   return (
     <div className="figma-fs-backdrop" onClick={onClose}>
-      <button type="button" className="figma-fs-close" onClick={(e) => { e.stopPropagation(); onClose(); }} aria-label="닫기">✕</button>
+      <CloseButton fixed onClick={(e) => { e.stopPropagation(); onClose(); }} />
       <button type="button" className="figma-fs-nav figma-fs-prev" onClick={(e) => { e.stopPropagation(); onPrev(); }} aria-label="이전">‹</button>
       <button type="button" className="figma-fs-nav figma-fs-next" onClick={(e) => { e.stopPropagation(); onNext(); }} aria-label="다음">›</button>
 

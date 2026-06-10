@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Candidate } from '../types/api';
 import { hasFigmaPrototype } from '../lib/imageUrl';
+import { CloseButton } from './CloseButton';
 import { FigmaFullscreen } from './FigmaFullscreen';
 import { Placeholder } from './Placeholder';
 
@@ -58,7 +59,7 @@ export function ArtworkLightbox({ candidates, index, onClose, onPrev, onNext }: 
       <button type="button" className="lb-nav lb-prev art-lb-nav" onClick={(e) => { e.stopPropagation(); onPrev(); }} aria-label="이전 후보">‹</button>
       <button type="button" className="lb-nav lb-next art-lb-nav" onClick={(e) => { e.stopPropagation(); onNext(); }} aria-label="다음 후보">›</button>
       <div className="art-lb-card" style={{ '--ph-h': cand.tint } as React.CSSProperties} onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="lb-close" onClick={onClose} aria-label="닫기">✕</button>
+        <CloseButton variant="surface" onClick={onClose} />
         <div className="art-lb-media">
           <Placeholder cand={cand} ratio="auto" round="0" emojiSize={100} fit="contain" className="art-lb-ph" />
         </div>

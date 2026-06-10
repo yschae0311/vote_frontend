@@ -196,7 +196,7 @@
   padding: 32px 28px 28px; text-align: center;
   animation: lbPop .26s cubic-bezier(.2,1.2,.4,1) both;
 }
-.qr-modal .lb-close { position: absolute; top: 14px; right: 14px; }
+.qr-modal .ui-close { position: absolute; top: 14px; right: 14px; }
 .qr-title {
   font-family: var(--font-display); font-size: 22px; letter-spacing: -0.02em;
   margin: 8px 0 0; line-height: 1.25;
@@ -266,7 +266,7 @@
 .cp-modal { width: min(760px, 100%); max-height: 90vh; overflow: auto; background: var(--surface); border-radius: 22px; box-shadow: var(--shadow-lg); animation: lbPop .26s cubic-bezier(.2,1.2,.4,1) both; }
 .cp-head { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px 26px 14px; position: sticky; top: 0; background: var(--surface); z-index: 2; }
 .cp-head h2 { margin: 5px 0 0; font-size: 23px; letter-spacing: -0.02em; }
-.cp-head .lb-close { position: static; }
+.cp-head .ui-close { position: static; }
 .cp-body { padding: 6px 26px 8px; display: flex; flex-direction: column; gap: 16px; }
 .cp-field { display: flex; flex-direction: column; gap: 7px; }
 .cp-label { font-size: 13px; font-weight: 800; color: var(--ink); }
@@ -904,6 +904,12 @@
   backdrop-filter: blur(8px);
   display: grid; place-items: center;
   padding: 16px;
+}
+.art-lb-card .ui-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
 }
 .art-lb-card {
   position: relative;

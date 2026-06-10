@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { PollType, VerifyField } from '../types/api';
 import { AdminWarnBanner } from './AdminWarnBanner';
+import { CloseButton } from './CloseButton';
 import { VerifyFieldPicker } from './VerifyFieldPicker';
 import { hasSelectionMismatch, selectionMismatchMessage } from '../lib/pollWarnings';
 
@@ -73,7 +74,7 @@ export function CreatePollModal({ onClose, onCreate }: CreatePollModalProps) {
             <span className="eyebrow">New poll</span>
             <h2>새 투표 만들기</h2>
           </div>
-          <button type="button" className="lb-close" onClick={onClose} aria-label="닫기">✕</button>
+          <CloseButton variant="surface" onClick={onClose} />
         </div>
         <div className="cp-body">
           <label className="cp-field">

@@ -15,6 +15,7 @@ import {
 import { ArtworkLightbox } from '../../components/ArtworkLightbox';
 import { Placeholder } from '../../components/Placeholder';
 import { PtBtn } from '../../components/PtBtn';
+import { ResultsModeDialog } from '../../components/ResultsModeDialog';
 import { getToken } from '../../lib/auth';
 import { hasFigmaPrototype, normalizeExternalUrl } from '../../lib/imageUrl';
 import type { Candidate, EligibleVoter, Poll, VerifyField } from '../../types/api';
@@ -54,6 +55,7 @@ export function EditPollPage() {
   const [voterBusy, setVoterBusy] = useState(false);
   const [voterRefresh, setVoterRefresh] = useState(0);
   const [verifyFields, setVerifyFields] = useState<VerifyField[]>(['email']);
+  const [showResultsMode, setShowResultsMode] = useState(false);
 
   const load = async () => {
     const p = await getPollAdmin(token, id);
@@ -247,7 +249,7 @@ export function EditPollPage() {
             <button type="submit" form="edit-meta-form" className="btn btn-primary edit-save-btn" disabled={saving}>
               {saving ? '저장 중…' : '저장하기'}
             </button>
-            <PtBtn variant="ghost" icon="📊" label="결과" to={`/admin/polls/${id}/results`} />
+            <PtBtn variant="ghost" icon="📊" label="결과" onClick={() => setShowResultsMode(true)} />
           </div>
         </div>
       </header>
@@ -471,6 +473,14 @@ export function EditPollPage() {
           </div>
         </div>
       </section>
+
+      {showResultsMode && (
+        <ResultsModeDialog
+          pollId={id}
+          pollTitle={poll.title}
+          onClose={() => setShowResultsMode(false)}
+        />
+      )}
 
       {viewerIndex !== null && (
         <ArtworkLightbox
