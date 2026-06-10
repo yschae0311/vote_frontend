@@ -50,6 +50,7 @@ export interface EligibleVoter {
 export interface VerifyVoterResponse {
   voter_token: string;
   voter_name: string;
+  already_voted?: boolean;
 }
 
 export interface VoteEntry {

@@ -42,6 +42,7 @@ export function RankPicker({
             <button
               key={rank}
               type="button"
+              data-rank={rank}
               className={`lb-rank-btn${iconOnly ? ' lb-rank-btn--icon' : ''}${isSelf ? ' is-self' : ''}${isTaken ? ' is-taken' : ''}${!occupantId ? ' is-empty' : ''}`}
               onClick={() => onPickRank(rank)}
               aria-pressed={isSelf}
@@ -53,7 +54,7 @@ export function RankPicker({
                     : `${rank}순위로 넣기`
               }
             >
-              <Medal rank={rank} size={iconOnly ? 28 : 24} />
+              <Medal rank={rank} size={iconOnly ? 32 : 24} />
               {!iconOnly && <span className="lb-rank-btn-label">{rank}순위</span>}
               {!iconOnly && isTaken && name && <span className="lb-rank-occupant">{name}</span>}
             </button>

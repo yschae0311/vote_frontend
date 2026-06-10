@@ -47,6 +47,10 @@ export function VotePage() {
   const [verified, setVerified] = useState(false);
   const [ballotSheetOpen, setBallotSheetOpen] = useState(false);
   const [rankPickerId, setRankPickerId] = useState<number | null>(null);
+  const [selectionCompleteToast, setSelectionCompleteToast] = useState(false);
+  const prevChosenCount = useRef(0);
+  const sheetTouchY = useRef(0);
+  const sheetDragging = useRef(false);
 
   const applyCheck = useCallback((check: Awaited<ReturnType<typeof checkVote>>, maxSel: number) => {
     if (check.voted && check.votes) {
@@ -119,6 +123,43 @@ export function VotePage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (!poll || voted) {
+      prevChosenCount.current = filledCount(rankSlots);
+      return;
+    }
+    const maxSel = poll.max_selections ?? 3;
+    const count = filledCount(rankSlots);
+    if (count === maxSel && prevChosenCount.current < maxSel) {
+      setSelectionCompleteToast(true);
+      const t = window.setTimeout(() => setSelectionCompleteToast(false), 4500);
+      prevChosenCount.current = count;
+      return () => window.clearTimeout(t);
+    }
+    prevChosenCount.current = count;
+  }, [rankSlots, poll, voted]);
+
+  const onSheetTouchStart = (e: React.TouchEvent) => {
+    sheetTouchY.current = e.touches[0].clientY;
+    sheetDragging.current = true;
+  };
+
+  const onSheetTouchMove = (e: React.TouchEvent) => {
+    if (!sheetDragging.current) return;
+    const dy = e.touches[0].clientY - sheetTouchY.current;
+    if (!ballotSheetOpen && dy < -28) {
+      setBallotSheetOpen(true);
+      sheetDragging.current = false;
+    } else if (ballotSheetOpen && dy > 28) {
+      setBallotSheetOpen(false);
+      sheetDragging.current = false;
+    }
+  };
+
+  const onSheetTouchEnd = () => {
+    sheetDragging.current = false;
+  };
+
   const submit = async () => {
     if (!poll || filledCount(rankSlots) === 0 || voted) return;
     setSubmitting(true);
@@ -160,6 +201,13 @@ export function VotePage() {
 
   return (
     <div className={`vote-page${canVote && !voted && ballotSheetOpen ? ' ballot-sheet-open' : ''}`}>
+      {selectionCompleteToast && !voted && (
+        <div className="vote-selection-toast" role="status" aria-live="polite">
+          <span className="vote-selection-toast-icon" aria-hidden>✓</span>
+          <span>{rankRangeLabel(maxSel)} 모두 선택 완료! 발표를 확인하고 제출하세요.</span>
+        </div>
+      )}
+
       <header className="vote-hero">
         <div className="vote-hero-top">
           <span className="eyebrow">Internal Vote · Poll #{poll.id}</span>
@@ -265,7 +313,13 @@ export function VotePage() {
           ))}
         </main>
         <aside className={`ballot${ballotSheetOpen ? ' is-open' : ' is-peek'}`}>
-          <div className="ballot-mobile-bar">
+          <div
+            className="ballot-mobile-bar"
+            onTouchStart={onSheetTouchStart}
+            onTouchMove={onSheetTouchMove}
+            onTouchEnd={onSheetTouchEnd}
+            onTouchCancel={onSheetTouchEnd}
+          >
             <button
               type="button"
               className="ballot-sheet-toggle"
@@ -364,25 +418,17 @@ export function VotePage() {
       </div>
       )}
 
-      {canVote && zoomCand && (
+      {canVote && zoomCand && zoomIndex >= 0 && (
         <Lightbox
-          cand={zoomCand}
+          candidates={poll.candidates}
+          index={zoomIndex}
           rankSlots={rankSlots}
           maxSelections={maxSel}
-          candidates={poll.candidates}
           total={poll.candidates.length}
-          index={zoomIndex}
           voted={voted}
           onClose={() => setZoomId(null)}
-          onPickRank={(rank) => pickRank(zoomCand.id, rank)}
-          onPrev={() => {
-            const n = poll.candidates.length;
-            setZoomId(poll.candidates[(zoomIndex - 1 + n) % n].id);
-          }}
-          onNext={() => {
-            const n = poll.candidates.length;
-            setZoomId(poll.candidates[(zoomIndex + 1) % n].id);
-          }}
+          onPickRank={(rank) => pickRank(poll.candidates[zoomIndex].id, rank)}
+          onIndexChange={(i) => setZoomId(poll.candidates[i].id)}
         />
       )}
     </div>

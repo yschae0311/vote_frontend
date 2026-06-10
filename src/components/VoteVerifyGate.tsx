@@ -116,7 +116,7 @@ export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyG
             </p>
           )}
           <button type="submit" className="btn btn-primary vote-verify-btn" disabled={loading}>
-            {loading ? '확인 중…' : '확인하고 투표하기'}
+            {loading ? '확인 중…' : '확인하기'}
           </button>
         </form>
       </div>

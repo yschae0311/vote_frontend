@@ -483,6 +483,43 @@
 .ballot-actions .btn-primary { flex: 1; }
 .ballot-note { font-size: 11.5px; color: var(--ink-3); line-height: 1.4; }
 
+/* selection complete toast */
+.vote-selection-toast {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 16px;
+  right: 16px;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: oklch(0.28 0.06 150 / 0.94);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: var(--shadow-lg);
+  animation: voteToastIn 0.32s cubic-bezier(.2, 1, .3, 1) both;
+  pointer-events: none;
+}
+.vote-selection-toast-icon {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: oklch(0.55 0.15 150);
+  font-size: 14px;
+  font-weight: 800;
+}
+@keyframes voteToastIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* mobile ballot sheet */
 .ballot-mobile-bar { display: none; }
 
@@ -516,7 +553,10 @@
     border-bottom: 1px solid transparent;
     background: var(--surface);
     flex: none;
+    touch-action: none;
+    cursor: grab;
   }
+  .ballot-mobile-bar:active { cursor: grabbing; }
   .ballot.is-open .ballot-mobile-bar {
     border-bottom-color: var(--line);
     padding-bottom: 10px;
