@@ -620,53 +620,109 @@
 .img-fs-prev { left: max(12px, env(safe-area-inset-left, 12px)); }
 .img-fs-next { right: max(12px, env(safe-area-inset-right, 12px)); }
 .img-fs-stage {
-  width: min(100%, 1200px); height: min(100vh - 24px, 900px);
-  display: grid; grid-template-rows: auto 1fr auto; gap: 10px;
-  align-items: center; justify-items: center;
+  width: min(100%, 1200px);
+  height: min(calc(100vh - 24px), 900px);
+  max-height: calc(100vh - 24px);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  min-height: 0;
 }
 .img-fs-counter {
+  flex: none;
   font-family: var(--font-display); font-size: 12px; letter-spacing: 0.12em;
   text-transform: uppercase; color: oklch(0.78 0.02 260); font-weight: 600;
+  text-align: center;
 }
 .img-fs-media {
-  width: 100%; height: 100%; min-height: 0;
-  display: grid; place-items: center;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   touch-action: none;
   cursor: grab;
 }
 .img-fs-media:active { cursor: grabbing; }
 .img-fs-zoom-layer {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
+  max-width: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transform-origin: center center;
   will-change: transform;
 }
-.img-fs-ph { width: 100%; height: 100%; max-height: calc(100vh - 140px); border-radius: 0; }
+.img-fs-ph,
+.img-fs-media img,
+.img-fs-zoom-layer img {
+  display: block;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain !important;
+  border-radius: 0;
+}
+.img-fs-ph.ph {
+  width: min(100%, 520px);
+  min-height: 200px;
+  height: auto !important;
+}
 .img-fs-caption {
+  flex: none;
   color: oklch(0.9 0.01 260); font-size: 14px; text-align: center;
 }
 .img-fs-caption strong { font-weight: 700; }
 @media (max-width: 760px) {
   .img-fs-backdrop { padding: 0; align-items: stretch; }
   .img-fs-stage {
+    display: grid;
     width: 100%;
     height: 100vh;
     height: 100dvh;
+    max-height: none;
     padding-bottom: env(safe-area-inset-bottom, 0);
     grid-template-rows: auto 1fr auto;
+    align-items: center;
+    justify-items: center;
   }
-  .img-fs-ph { max-height: calc(100dvh - 80px); }
+  .img-fs-counter,
+  .img-fs-caption { flex: initial; }
+  .img-fs-media {
+    flex: initial;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+  }
+  .img-fs-zoom-layer {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+  }
+  .img-fs-ph,
+  .img-fs-media img,
+  .img-fs-zoom-layer img {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: calc(100dvh - 80px);
+  }
   .img-fs-nav { width: 40px; height: 40px; font-size: 20px; }
   .img-fs-prev { left: max(8px, env(safe-area-inset-left, 8px)); }
   .img-fs-next { right: max(8px, env(safe-area-inset-right, 8px)); }
 }
-@media (orientation: landscape) and (max-height: 520px) {
+@media (max-width: 760px) and (orientation: landscape) and (max-height: 520px) {
   .img-fs-stage { height: 100vh; grid-template-rows: auto 1fr; }
   .img-fs-caption { display: none; }
-  .img-fs-ph { max-height: calc(100vh - 48px); }
+  .img-fs-ph,
+  .img-fs-media img,
+  .img-fs-zoom-layer img { max-height: calc(100vh - 48px); }
 }
 
 /* ---- figma fullscreen ---- */
