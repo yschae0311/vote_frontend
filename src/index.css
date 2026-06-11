@@ -1,5 +1,6 @@
 @import './styles/tokens.css';
 @import './styles/components.css';
+@import './styles/home.css';
 @import './styles/vote.css';
 @import './styles/complete.css';
 @import './styles/admin.css';
@@ -39,3 +40,16 @@
   font-size: 13px;
   margin: 0;
 }
+.login-home-link {
+  display: block;
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color .15s;
+}
+.login-home-link:hover { color: var(--accent-strong); }

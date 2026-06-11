@@ -232,7 +232,11 @@ export function EditPollPage() {
   return (
     <div className="manage-page edit-page">
       <header className="manage-hero edit-hero">
-        <Link to="/admin" className="eyebrow" style={{ textDecoration: 'none' }}>← 투표 관리</Link>
+        <nav className="admin-top-nav" aria-label="페이지 이동">
+          <Link to="/admin" className="eyebrow admin-top-nav-link">← 투표 관리</Link>
+          <span className="admin-top-nav-sep" aria-hidden>·</span>
+          <Link to="/" className="eyebrow admin-top-nav-link">투표 목록</Link>
+        </nav>
         <div className="edit-toolbar">
           <div className="edit-toolbar-title">
             <h1 className="manage-title">투표 수정</h1>

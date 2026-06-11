@@ -92,6 +92,7 @@ export function PublicResultsPage() {
   return (
     <div className="public-results-page">
       <header className="public-results-hero">
+        <Link to="/" className="vote-back-link">← 투표 목록</Link>
         <span className="eyebrow">Vote Results · Poll #{poll.id}</span>
         <h1 className="public-results-title">{poll.title}</h1>
         {intro && <p className="public-results-intro">{intro}</p>}

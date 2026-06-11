@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../../api/admin';
 import { setToken } from '../../lib/auth';
 import { ApiError } from '../../api/client';
@@ -45,6 +45,7 @@ export function LoginPage() {
         <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', marginTop: 8 }}>
           {loading ? '로그인 중…' : '로그인'}
         </button>
+        <Link to="/" className="login-home-link">← 투표 목록으로</Link>
       </form>
     </div>
   );

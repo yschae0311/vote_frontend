@@ -63,6 +63,19 @@ export interface CheckResponse {
   votes?: VoteEntry[] | null;
 }
 
+export interface PollPublicListItem {
+  id: number;
+  title: string;
+  category: string;
+  status: string;
+  candidates: number;
+  max_selections: number;
+  poll_type: PollType;
+  ballots: number;
+  closes_at?: string | null;
+  desc?: string | null;
+}
+
 export interface PollListItem {
   id: number;
   title: string;

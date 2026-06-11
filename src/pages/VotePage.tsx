@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { checkVote, getPoll, submitVote } from '../api/polls';
 import { CandidateCard } from '../components/CandidateCard';
 import { CountdownPill } from '../components/CountdownPill';
@@ -210,7 +210,10 @@ export function VotePage() {
 
       <header className="vote-hero">
         <div className="vote-hero-top">
-          <span className="eyebrow">Internal Vote · Poll #{poll.id}</span>
+          <div className="vote-hero-nav">
+            <Link to="/" className="vote-back-link">← 투표 목록</Link>
+            <span className="eyebrow">Internal Vote · Poll #{poll.id}</span>
+          </div>
           <div className="vote-status">
             {poll.status === 'active' ? (
               <span className="pill pill-live"><span className="dot" />투표 진행중</span>

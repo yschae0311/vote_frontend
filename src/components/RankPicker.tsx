@@ -31,7 +31,7 @@ export function RankPicker({
 
   return (
     <div className={`lb-rank-pick${iconOnly ? ' lb-rank-pick--icons' : ''}`}>
-      {showLabel && !iconOnly && <span className="lb-rank-label">순위 선택</span>}
+      {showLabel && <span className="lb-rank-label">순위 선택</span>}
       <div className={`lb-rank-btns lb-rank-cols-${maxSelections}${iconOnly ? ' lb-rank-btns--icons' : ''}`}>
         {rankNumbers(maxSelections).map((rank) => {
           const occupantId = candidateAt(rankSlots, rank);
@@ -55,8 +55,26 @@ export function RankPicker({
               }
             >
               <Medal rank={rank} size={iconOnly ? 32 : 24} />
-              {!iconOnly && <span className="lb-rank-btn-label">{rank}순위</span>}
-              {!iconOnly && isTaken && name && <span className="lb-rank-occupant">{name}</span>}
+              {iconOnly ? (
+                <span className="lb-rank-btn-copy">
+                  <span className="lb-rank-btn-label">{rank}순위</span>
+                  {isSelf ? (
+                    <span className="lb-rank-btn-status is-on">이 후보 선택됨</span>
+                  ) : isTaken ? (
+                    <>
+                      {name && <span className="lb-rank-occupant">{name}</span>}
+                      <span className="lb-rank-btn-status">클릭하면 대체</span>
+                    </>
+                  ) : (
+                    <span className="lb-rank-btn-status">클릭하여 배치</span>
+                  )}
+                </span>
+              ) : (
+                <>
+                  <span className="lb-rank-btn-label">{rank}순위</span>
+                  {isTaken && name && <span className="lb-rank-occupant">{name}</span>}
+                </>
+              )}
             </button>
           );
         })}

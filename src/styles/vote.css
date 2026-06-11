@@ -3,6 +3,15 @@
 
 .vote-hero { margin-bottom: 22px; }
 .vote-hero-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.vote-hero-nav { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.vote-back-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color .15s;
+}
+.vote-back-link:hover { color: var(--accent-strong); }
 .vote-status { display: flex; gap: 10px; flex-wrap: wrap; }
 .vote-title {
   font-family: var(--font-display);

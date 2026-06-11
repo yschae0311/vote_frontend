@@ -1,5 +1,17 @@
 import { apiFetch } from './client';
-import type { CheckResponse, Poll, PollPublic, ResultsOut, VerifyVoterResponse, VoteEntry } from '../types/api';
+import type {
+  CheckResponse,
+  Poll,
+  PollPublic,
+  PollPublicListItem,
+  ResultsOut,
+  VerifyVoterResponse,
+  VoteEntry,
+} from '../types/api';
+
+export function listPublicPolls() {
+  return apiFetch<PollPublicListItem[]>('/polls');
+}
 
 export function getPoll(pollId: number) {
   return apiFetch<Poll>(`/polls/${pollId}`);

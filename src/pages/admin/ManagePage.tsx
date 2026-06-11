@@ -95,7 +95,8 @@ export function ManagePage() {
           <h1 className="manage-title">투표 관리</h1>
           <p className="manage-sub">새 투표를 만들고, 시작·종료를 제어하고, 결과를 확인합니다.</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Link to="/" className="btn btn-ghost">투표 목록</Link>
           <button type="button" className="btn btn-ghost" onClick={() => { clearToken(); navigate('/admin/login'); }}>로그아웃</button>
           <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>＋ 새 투표 만들기</button>
         </div>
