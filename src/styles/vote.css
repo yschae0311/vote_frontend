@@ -209,6 +209,17 @@
   font-weight: 800;
   letter-spacing: -0.01em;
 }
+.vote-verify-pin {
+  text-align: center;
+  letter-spacing: 0.35em;
+  font-size: 22px;
+  font-weight: 800;
+  font-family: var(--font-display);
+}
+.vote-verify-back {
+  width: 100%;
+  margin-top: 4px;
+}
 .vote-verified-banner {
   display: flex;
   align-items: center;
@@ -444,6 +455,17 @@
 }
 @media (min-width: 560px) {
   .voted-banner-actions { width: auto; flex: none; }
+}
+.voted-banner--editable {
+  background: linear-gradient(120deg, oklch(0.96 0.04 var(--accent-h)), oklch(0.97 0.03 280));
+  border-color: oklch(0.86 0.06 var(--accent-h));
+}
+.voted-banner--editable .voted-icon {
+  background: var(--accent);
+  font-size: 18px;
+}
+.voted-banner--editable .voted-text strong {
+  color: var(--accent-strong);
 }
 
 /* layout */

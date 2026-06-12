@@ -27,7 +27,7 @@ export function getPublicResults(pollId: number) {
 
 export function verifyVoter(
   pollId: number,
-  payload: { name?: string; email?: string; phone?: string },
+  payload: { name?: string; email?: string; phone?: string; pin?: string },
 ) {
   return apiFetch<VerifyVoterResponse>(`/polls/${pollId}/verify`, {
     method: 'POST',

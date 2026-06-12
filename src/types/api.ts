@@ -48,9 +48,12 @@ export interface EligibleVoter {
 }
 
 export interface VerifyVoterResponse {
-  voter_token: string;
+  verified: boolean;
+  voter_token: string | null;
   voter_name: string;
   already_voted?: boolean;
+  pin_required: boolean;
+  pin_setup: boolean;
 }
 
 export interface VoteEntry {

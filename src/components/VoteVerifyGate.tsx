@@ -17,30 +17,134 @@ interface VoteVerifyGateProps {
   onVerified: (token: string, name: string) => void;
 }
 
+type Step = 'identity' | 'pin';
+
 export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyGateProps) {
+  const [step, setStep] = useState<Step>('identity');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [pin, setPin] = useState('');
+  const [pinSetup, setPinSetup] = useState(false);
+  const [matchedName, setMatchedName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const submit = async (e: FormEvent) => {
+  const identityPayload = {
+    name: verifyFields.includes('name') ? name.trim() : undefined,
+    email: verifyFields.includes('email') ? email.trim() : undefined,
+    phone: verifyFields.includes('phone') ? phone.trim() : undefined,
+  };
+
+  const finishVerify = (res: Awaited<ReturnType<typeof verifyVoter>>) => {
+    if (!res.verified || !res.voter_token) {
+      setError('인증에 실패했습니다. 다시 시도해주세요.');
+      return;
+    }
+    onVerified(res.voter_token, res.voter_name);
+  };
+
+  const submitIdentity = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const res = await verifyVoter(pollId, {
-        name: verifyFields.includes('name') ? name.trim() : undefined,
-        email: verifyFields.includes('email') ? email.trim() : undefined,
-        phone: verifyFields.includes('phone') ? phone.trim() : undefined,
-      });
-      onVerified(res.voter_token, res.voter_name);
+      const res = await verifyVoter(pollId, identityPayload);
+      if (res.pin_required) {
+        setMatchedName(res.voter_name);
+        setPinSetup(res.pin_setup);
+        setPin('');
+        setStep('pin');
+        return;
+      }
+      finishVerify(res);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : '본인 확인에 실패했습니다.');
     } finally {
       setLoading(false);
     }
   };
+
+  const submitPin = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{4}$/.test(pin)) {
+      setError('4자리 숫자 비밀번호를 입력해주세요.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await verifyVoter(pollId, { ...identityPayload, pin });
+      finishVerify(res);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : '비밀번호 확인에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const backToIdentity = () => {
+    setStep('identity');
+    setPin('');
+    setError('');
+  };
+
+  if (step === 'pin') {
+    return (
+      <section className="vote-verify" aria-label="투표 비밀번호 확인">
+        <div className="vote-verify-card">
+          <div className="vote-verify-head">
+            <div className="vote-verify-icon" aria-hidden>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+            <div className="vote-verify-head-copy">
+              <span className="vote-verify-step">STEP 2</span>
+              <h2 className="vote-verify-title">{pinSetup ? '비밀번호 설정' : '비밀번호 확인'}</h2>
+            </div>
+          </div>
+
+          <p className="vote-verify-desc">
+            <strong>{matchedName}</strong>님, {pinSetup
+              ? '재방문 시 사용할 4자리 숫자 비밀번호를 설정해주세요.'
+              : '등록된 4자리 숫자 비밀번호를 입력해주세요.'}
+          </p>
+
+          <form className="vote-verify-form" onSubmit={submitPin}>
+            <label className="vote-verify-field">
+              <span className="vote-verify-label">{pinSetup ? '새 비밀번호 (4자리)' : '비밀번호 (4자리)'}</span>
+              <input
+                className="vote-verify-input vote-verify-pin"
+                type="password"
+                inputMode="numeric"
+                autoComplete={pinSetup ? 'new-password' : 'current-password'}
+                maxLength={4}
+                pattern="\d{4}"
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                placeholder="••••"
+                autoFocus
+              />
+            </label>
+            {error && (
+              <p className="vote-verify-error" role="alert">
+                <span className="vote-verify-error-icon" aria-hidden>!</span>
+                {error}
+              </p>
+            )}
+            <button type="submit" className="btn btn-primary vote-verify-btn" disabled={loading || pin.length !== 4}>
+              {loading ? '확인 중…' : pinSetup ? '설정하고 투표하기' : '확인하기'}
+            </button>
+            <button type="button" className="btn btn-ghost vote-verify-back" onClick={backToIdentity}>
+              ← 정보 다시 입력
+            </button>
+          </form>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="vote-verify" aria-label="투표 대상자 확인">
@@ -60,6 +164,7 @@ export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyG
 
         <p className="vote-verify-desc">
           등록된 <strong>{verifyFieldsLabel(verifyFields)}</strong>가 맞는지 확인해주세요.
+          확인 후 4자리 비밀번호를 설정하거나 입력합니다.
         </p>
 
         <div className="vote-verify-tags" aria-hidden>
@@ -68,7 +173,7 @@ export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyG
           ))}
         </div>
 
-        <form className="vote-verify-form" onSubmit={submit}>
+        <form className="vote-verify-form" onSubmit={submitIdentity}>
           {verifyFields.includes('name') && (
             <label className="vote-verify-field">
               <span className="vote-verify-label">이름</span>
@@ -116,7 +221,7 @@ export function VoteVerifyGate({ pollId, verifyFields, onVerified }: VoteVerifyG
             </p>
           )}
           <button type="submit" className="btn btn-primary vote-verify-btn" disabled={loading}>
-            {loading ? '확인 중…' : '확인하기'}
+            {loading ? '확인 중…' : '다음 (비밀번호)'}
           </button>
         </form>
       </div>

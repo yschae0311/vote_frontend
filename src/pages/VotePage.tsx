@@ -52,6 +52,10 @@ export function VotePage() {
   const sheetTouchY = useRef(0);
   const sheetDragging = useRef(false);
 
+  const isRestricted = (poll?.poll_type ?? 'open') === 'restricted';
+  const ballotEditable = isRestricted && poll?.status === 'active' && voted;
+  const ballotLocked = voted && !ballotEditable;
+
   const applyCheck = useCallback((check: Awaited<ReturnType<typeof checkVote>>, maxSel: number) => {
     if (check.voted && check.votes) {
       setVoted(true);
@@ -124,7 +128,7 @@ export function VotePage() {
   }, []);
 
   useEffect(() => {
-    if (!poll || voted) {
+    if (!poll || ballotLocked) {
       prevChosenCount.current = filledCount(rankSlots);
       return;
     }
@@ -137,7 +141,7 @@ export function VotePage() {
       return () => window.clearTimeout(t);
     }
     prevChosenCount.current = count;
-  }, [rankSlots, poll, voted]);
+  }, [rankSlots, poll, ballotLocked]);
 
   const onSheetTouchStart = (e: React.TouchEvent) => {
     sheetTouchY.current = e.touches[0].clientY;
@@ -161,7 +165,7 @@ export function VotePage() {
   };
 
   const submit = async () => {
-    if (!poll || filledCount(rankSlots) === 0 || voted) return;
+    if (!poll || filledCount(rankSlots) === 0 || ballotLocked) return;
     setSubmitting(true);
     try {
       const votes = slotsToVotes(rankSlots);
@@ -189,7 +193,6 @@ export function VotePage() {
   const remaining = maxSel - chosenCount;
   const zoomIndex = zoomId == null ? -1 : poll.candidates.findIndex((c) => c.id === zoomId);
   const zoomCand = zoomIndex === -1 ? null : poll.candidates[zoomIndex];
-  const isRestricted = (poll.poll_type ?? 'open') === 'restricted';
   const verifyFields = parseVerifyFields(poll.verify_fields);
   const canVote = !isRestricted || verified;
 
@@ -200,8 +203,8 @@ export function VotePage() {
       : `${chosenCount}명 선택 완료`;
 
   return (
-    <div className={`vote-page${canVote && !voted && ballotSheetOpen ? ' ballot-sheet-open' : ''}`}>
-      {selectionCompleteToast && !voted && (
+    <div className={`vote-page${canVote && !ballotLocked && ballotSheetOpen ? ' ballot-sheet-open' : ''}`}>
+      {selectionCompleteToast && !ballotLocked && (
         <div className="vote-selection-toast" role="status" aria-live="polite">
           <span className="vote-selection-toast-icon" aria-hidden>✓</span>
           <span>{rankRangeLabel(maxSel)} 모두 선택 완료! 발표를 확인하고 제출하세요.</span>
@@ -235,14 +238,24 @@ export function VotePage() {
         <VoteVerifyGate pollId={id} verifyFields={verifyFields} onVerified={onVerified} />
       )}
 
-      {isRestricted && verified && voterName && !voted && (
+      {isRestricted && verified && voterName && !ballotLocked && (
         <div className="vote-verified-banner">
           <span className="vote-verified-icon" aria-hidden>✓</span>
           <span><strong>{voterName}</strong>님으로 확인되었습니다. 아래에서 투표해주세요.</span>
         </div>
       )}
 
-      {canVote && voted ? (
+      {canVote && ballotEditable && (
+        <div className="voted-banner voted-banner--editable">
+          <div className="voted-icon">✎</div>
+          <div className="voted-text">
+            <strong>이미 투표하셨어요</strong>
+            <span>투표 진행 중에는 순위를 수정할 수 있습니다. 변경 후 다시 제출해주세요.</span>
+          </div>
+        </div>
+      )}
+
+      {canVote && ballotLocked ? (
         <div className="voted-banner">
           <div className="voted-icon">✓</div>
           <div className="voted-text">
@@ -291,7 +304,7 @@ export function VotePage() {
       ) : null}
 
       {canVote && (
-      <div className={`vote-layout${voted ? ' is-locked' : ''}`}>
+      <div className={`vote-layout${ballotLocked ? ' is-locked' : ''}`}>
         <main className="cand-grid" aria-label="후보 목록">
           {poll.candidates.map((c) => (
             <CandidateCard
@@ -301,7 +314,7 @@ export function VotePage() {
               rankSlots={rankSlots}
               maxSelections={maxSel}
               candidates={poll.candidates}
-              voted={voted}
+              voted={ballotLocked}
               rankPickerOpen={rankPickerId === c.id}
               onOpen={(cid) => {
                 setRankPickerId(null);
@@ -337,7 +350,7 @@ export function VotePage() {
               </span>
               <span className="ballot-sheet-chevron" aria-hidden />
             </button>
-            {!ballotSheetOpen && voted && (
+            {!ballotSheetOpen && ballotLocked && (
               <button
                 type="button"
                 className="btn btn-primary ballot-sheet-quick"
@@ -346,14 +359,14 @@ export function VotePage() {
                 결과 보기
               </button>
             )}
-            {!ballotSheetOpen && !voted && chosenCount > 0 && (
+            {!ballotSheetOpen && !ballotLocked && chosenCount > 0 && (
               <button
                 type="button"
                 className="btn btn-primary ballot-sheet-quick"
                 disabled={submitting}
                 onClick={() => void submit()}
               >
-                {submitting ? '…' : '제출'}
+                {submitting ? '…' : ballotEditable ? '수정' : '제출'}
               </button>
             )}
           </div>
@@ -377,7 +390,7 @@ export function VotePage() {
                         <div className="slot-name">{c.name}</div>
                         {c.team && <div className="slot-team">{c.team}</div>}
                       </div>
-                      {!voted && (
+                      {!ballotLocked && (
                         <button type="button" className="slot-x" onClick={() => setRankSlots((s) => clearRank(s, r))} aria-label={`${r}순위 비우기`}>✕</button>
                       )}
                     </>
@@ -390,29 +403,32 @@ export function VotePage() {
           </div>
           <div className="ballot-foot">
             <div className="ballot-hint">
-              {voted && '투표가 완료되었습니다. 결과 페이지에서 확인할 수 있어요.'}
-              {!voted && chosenCount === 0 && '최소 1명 이상 선택하면 제출할 수 있어요.'}
-              {!voted && chosenCount > 0 && remaining > 0 && `${remaining}개 순위가 비어 있어요 (채우지 않아도 제출 가능).`}
-              {!voted && chosenCount === maxSel && `선택 가능한 ${maxSel}명을 모두 채웠어요. 제출만 하면 끝!`}
+              {ballotLocked && '투표가 완료되었습니다. 결과 페이지에서 확인할 수 있어요.'}
+              {ballotEditable && '순위를 바꾼 뒤 아래에서 다시 제출해주세요.'}
+              {!ballotLocked && !ballotEditable && chosenCount === 0 && '최소 1명 이상 선택하면 제출할 수 있어요.'}
+              {!ballotLocked && chosenCount > 0 && remaining > 0 && `${remaining}개 순위가 비어 있어요 (채우지 않아도 제출 가능).`}
+              {!ballotLocked && chosenCount === maxSel && `선택 가능한 ${maxSel}명을 모두 채웠어요. 제출만 하면 끝!`}
             </div>
             <div className="ballot-actions">
-              {!voted && (
+              {!ballotLocked && (
                 <button type="button" className="btn btn-ghost" disabled={chosenCount === 0} onClick={() => setRankSlots(emptyRankSlots(maxSel))}>비우기</button>
               )}
-              {voted ? (
+              {ballotLocked ? (
                 <button type="button" className="btn btn-primary" onClick={() => navigate(`/polls/${id}/results`)}>
                   투표 결과 보기
                 </button>
               ) : (
                 <button type="button" className="btn btn-primary" disabled={chosenCount === 0 || submitting} onClick={submit}>
-                  {submitting ? '제출 중…' : '투표 제출하기'}
+                  {submitting ? '제출 중…' : ballotEditable ? '투표 수정하기' : '투표 제출하기'}
                 </button>
               )}
             </div>
             <div className="ballot-note">
               <span aria-hidden>🔒</span>
               {isRestricted
-                ? '등록된 대상자 1인 1표입니다. 제출 후에는 수정할 수 없어요.'
+                ? ballotEditable
+                  ? '등록된 대상자 1인 1표입니다. 투표 진행 중에는 순위를 수정할 수 있어요.'
+                  : '등록된 대상자 1인 1표입니다. 제출 후에는 수정할 수 없어요.'
                 : '브라우저 지문으로 중복 투표를 방지합니다. 제출 후에는 수정할 수 없어요.'}
             </div>
           </div>
@@ -428,7 +444,7 @@ export function VotePage() {
           rankSlots={rankSlots}
           maxSelections={maxSel}
           total={poll.candidates.length}
-          voted={voted}
+          voted={ballotLocked}
           onClose={() => setZoomId(null)}
           onPickRank={(rank) => pickRank(poll.candidates[zoomIndex].id, rank)}
           onIndexChange={(i) => setZoomId(poll.candidates[i].id)}
